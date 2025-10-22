@@ -3,10 +3,11 @@ import * as React from "react"
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
   size?: "default" | "sm" | "lg" | "icon"
+  asChild?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "default", size = "default", ...props }, ref) => {
+  ({ className, variant = "default", size = "default", asChild, ...props }, ref) => {
     const baseStyles = "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background"
     
     const variantStyles = {
@@ -25,9 +26,18 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       icon: "h-10 w-10",
     }
     
+    const buttonClassName = `${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className || ""}`
+    
+    if (asChild) {
+      return React.cloneElement(props.children as React.ReactElement, {
+        className: buttonClassName,
+        ref,
+      })
+    }
+    
     return (
       <button
-        className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className || ""}`}
+        className={buttonClassName}
         ref={ref}
         {...props}
       />

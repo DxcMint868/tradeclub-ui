@@ -13,7 +13,23 @@ import {
 
 const TradingChart = dynamic(() => import('@/components/trading-chart'), { ssr: false });
 
-const initialAssets = [
+interface Asset {
+  id: string;
+  name: string;
+  apiId: string;
+  coinGeckoId: string;
+  imageUrl: string;
+}
+
+interface CandleData {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+}
+
+const initialAssets: Asset[] = [
   { id: "BTC", name: "Bitcoin", apiId: 'BTC', coinGeckoId: 'bitcoin', imageUrl: '' },
   { id: "ETH", name: "Ethereum", apiId: 'ETH', coinGeckoId: 'ethereum', imageUrl: '' },
   { id: "SOL", name: "Solana", apiId: 'SOL', coinGeckoId: 'solana', imageUrl: '' },
@@ -21,7 +37,7 @@ const initialAssets = [
   { id: "MON", name: "Monad", apiId: 'APT', coinGeckoId: 'aptos', imageUrl: '/MONlogo.jpg' }, // Using local logo for MON
 ];
 
-const getIntervalInMilliseconds = (interval) => {
+const getIntervalInMilliseconds = (interval: string) => {
     const unit = interval.slice(-1);
     const value = parseInt(interval.slice(0, -1));
     switch (unit) {
@@ -32,7 +48,7 @@ const getIntervalInMilliseconds = (interval) => {
     }
 };
 
-const formatPrice = (price) => {
+const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', { 
         style: 'currency', 
         currency: 'USD', 
@@ -47,11 +63,11 @@ export default function TradePage() {
   const [selectedAsset, setSelectedAsset] = useState("BTC");
   const [leverage, setLeverage] = useState(10);
   const [activeTab, setActiveTab] = useState('positions');
-  const [chartData, setChartData] = useState([]);
+  const [chartData, setChartData] = useState<CandleData[]>([]);
   const [timeInterval, setTimeInterval] = useState('1H');
-  const [assets, setAssets] = useState([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [assetsLoading, setAssetsLoading] = useState(true);
-  const seriesRef = useRef(null);
+  const seriesRef = useRef<any>(null);
 
   const currentColor = "#a855f7"; // Always purple
 
@@ -64,17 +80,18 @@ export default function TradePage() {
         try {
             const idsToFetch = coingeckoAssets.map(a => a.coinGeckoId).join(',');
             const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${idsToFetch}`);
-            const data = await response.json();
+            const data: any[] = await response.json();
             
             const updatedCoinGeckoAssets = coingeckoAssets.map(asset => {
-                const coinData = data.find(d => d.id === asset.coinGeckoId);
+                const coinData = data.find((d: any) => d.id === asset.coinGeckoId);
                 if (coinData) {
                     return { ...asset, imageUrl: coinData.image };
                 }
                 return asset;
             });
 
-            setAssets([...updatedCoinGeckoAssets, monadAsset]);
+            const assetsToSet = monadAsset ? [...updatedCoinGeckoAssets, monadAsset] : updatedCoinGeckoAssets;
+            setAssets(assetsToSet);
 
         } catch (error) {
             console.error("Failed to fetch asset images:", error);
@@ -110,8 +127,8 @@ export default function TradePage() {
             },
           }),
         });
-        const data = await response.json();
-        const formattedData = data.map(d => ({
+        const data: any[] = await response.json();
+        const formattedData = data.map((d: any) => ({
           time: Math.floor(new Date(d.t).getTime() / 1000),
           open: parseFloat(d.o),
           high: parseFloat(d.h),
@@ -127,7 +144,7 @@ export default function TradePage() {
     fetchHistoricalData();
   }, [selectedAsset, timeInterval, assets, assetsLoading]);
 
-  const onSeriesCreated = useCallback((series) => {
+  const onSeriesCreated = useCallback((series: any) => {
     seriesRef.current = series;
   }, []);
 

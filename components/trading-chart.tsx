@@ -1,16 +1,33 @@
 "use client";
 
 import { useEffect, useRef, memo } from 'react';
-import { createChart, ColorType, CandlestickSeries } from 'lightweight-charts';
+import { createChart, ColorType, CandlestickSeries, CrosshairMode } from 'lightweight-charts';
 
-const TradingChart = ({ data, onSeriesCreated }) => {
-  const chartContainerRef = useRef();
-  const chartRef = useRef();
-  const seriesRef = useRef();
+interface CandleData {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+}
+
+interface TradingChartProps {
+  data: CandleData[];
+  onSeriesCreated?: (series: any) => void;
+}
+
+const TradingChart = ({ data, onSeriesCreated }: TradingChartProps) => {
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<any>(null);
+  const seriesRef = useRef<any>(null);
 
   useEffect(() => {
+    if (!chartContainerRef.current) return;
+    
     const handleResize = () => {
-      chartRef.current.applyOptions({ width: chartContainerRef.current.clientWidth });
+      if (chartRef.current && chartContainerRef.current) {
+        chartRef.current.applyOptions({ width: chartContainerRef.current.clientWidth });
+      }
     };
 
     chartRef.current = createChart(chartContainerRef.current, {
@@ -30,7 +47,7 @@ const TradingChart = ({ data, onSeriesCreated }) => {
         },
       },
       crosshair: {
-        mode: 'normal',
+        mode: CrosshairMode.Normal,
       },
       rightPriceScale: {
         borderColor: 'rgba(197, 203, 206, 0.3)',
